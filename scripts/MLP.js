@@ -1491,12 +1491,12 @@ function drawLink(input, node2coord, network, container, isFirst, index, length)
 
     let datum = {
         source: {
-            y: source.cx + RECT_SIZE / 2 + 2,
+            y: source.cx + RECT_SIZE / 2, // + 2,
             x: source.cy
         },
         target: {
             y: dest.cx - RECT_SIZE / 2,
-            x: dest.cy + ((index - (length - 1) / 2) / length) * 12
+            x: dest.cy// + ((index - (length - 1) / 2) / length) * 12
         }
     };
     let diagonal = d3.svg.diagonal().projection(function (d) { return [d.y, d.x]; });
