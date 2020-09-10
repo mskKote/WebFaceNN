@@ -23,7 +23,6 @@ function classifyTwoGaussData(numSamples, noise) {
             points.push({ x: x, y: y, label: label });
         }
     }
-    // Нужно подстроиться под  и MLP, но лучше сперва написать Андрею об этом.
     genGauss(2, 2, 1);
     genGauss(-2, -2, -1);
     return points;
@@ -288,41 +287,6 @@ function forEachNode(network, ignoreInputs, accessor) {
 function getOutputNode(network) {
     return network[network.length - 1][0];
 }
-    //
-    //function buildNetwork(networkShape, activation, outputActivation, regularization, inputIds, initZero) {
-    //    let numLayers = networkShape.length;
-    //    let id = 1;
-    //    let network = [];
-    //    for (let layerIdx = 0; layerIdx < numLayers; layerIdx++) {
-    //        let isOutputLayer = layerIdx === numLayers - 1;
-    //        let isInputLayer = layerIdx === 0;
-    //        let currentLayer = [];
-    //        network.push(currentLayer);
-    //        let numNodes = networkShape[layerIdx];
-    //        for (let i = 0; i < numNodes; i++) {
-    //            let nodeId = id.toString();
-    //            if (isInputLayer) {
-    //                nodeId = inputIds[i];
-    //            }
-    //            else {
-    //                id++;
-    //            }
-    //            let node = new Node(nodeId, isOutputLayer ? outputActivation : activation, initZero);
-    //            currentLayer.push(node);
-    //            if (layerIdx >= 1) {
-    //                for (let j = 0; j < network[layerIdx - 1].length; j++) {
-    //                    let prevNode = network[layerIdx - 1][j];
-    //                    let link = new Link(prevNode, node, regularization, initZero);
-    //                    prevNode.outputs.push(link);
-    //                    node.inputLinks.push(link);
-    //                }
-    //            }
-    //        }
-    //    }
-    //    return network;
-    //}
-//----------------------------------------------------------------------------------------------------------------ОК
-
 
 function forwardProp(network, inputs) {
     let inputLayer = network[0];
@@ -342,7 +306,7 @@ function forwardProp(network, inputs) {
     }
     return network[network.length - 1][0].output;
 }
-function updateWeights(network, learningRate, regularizationRate) { // Она вызывает проблемы и она не нужна
+function updateWeights(network, learningRate, regularizationRate) {
     for (let layerIdx = 1; layerIdx < network.length; layerIdx++) {
         let currentLayer = network[layerIdx];
         for (let i = 0; i < currentLayer.length; i++) {
@@ -933,6 +897,7 @@ class Player {
                 return true;
             }
             oneStep();
+            //this.isPlaying = false;
             return false;
         }, 0);
     }
@@ -966,6 +931,8 @@ let lossTest = 0;
 let player = new Player();
 let lineChart = new AppendingLineChart(d3.selectAll("#linechart"), ["#777", "black"]);
 
+let oneStep_button = false;
+let oneStep_first = true;
 // OK
 function makeGUI() {
     d3.select("#reset-button").on("click", function () {
@@ -980,6 +947,7 @@ function makeGUI() {
     });
     d3.select("#next-step-button").on("click", function () {
         player.pause();
+        oneStep_button = true;
         oneStep();
     });
     d3.select("#data-regen-button").on("click", function () {
@@ -1278,12 +1246,8 @@ function drawNode(cx, cy, nodeId, isInput, container, node) {
     div.datum({ heatmap: nodeHeatMap, id: nodeId });
 }
 //=========== Рисуем все узлы
-// Варианты
-//1проблема у андрея
-// неправильная логика обработки данных для рисовки
-// с самой рисовкой пизда
 function drawNetwork(network) {
-    console.log('drawNetwork');
+    //console.log('drawNetwork');
 
     let svg = d3.select("#svg");
     svg.select("g.core").remove();
@@ -1318,15 +1282,15 @@ function drawNetwork(network) {
         let cy = nodeIndexScale(i) + RECT_SIZE / 2;
         node2coord[nodeId] = { cx: cx, cy: cy };
         drawNode(cx, cy, nodeId, true, container);
-    }); // Тут все рисуются
+    });
 
-    for (let layerIdx = 1; layerIdx < numLayers - 1; layerIdx++) { // Здесь не определяются позиции узлов
+    for (let layerIdx = 1; layerIdx < numLayers - 1; layerIdx++) {
         let numNodes = network[layerIdx].length;
         let cx_1 = layerScale(layerIdx) + RECT_SIZE / 2;
         maxY = Math.max(maxY, nodeIndexScale(numNodes));
         addPlusMinusControl(layerScale(layerIdx), layerIdx);
 
-        // Проходимся по конкретным узлам. Тут что-то сломалось.
+        // Проходимся по конкретным узлам.
         for (let i = 0; i < numNodes; i++) {
             let node_1 = network[layerIdx][i];
             let cy_1 = nodeIndexScale(i) + RECT_SIZE / 2;
@@ -1376,11 +1340,7 @@ function drawNetwork(network) {
     }
     svg.attr("height", maxY);
     let height = Math.max(getRelativeHeight(calloutThumb), getRelativeHeight(calloutWeights), getRelativeHeight(d3.select("#network")));
-    d3.select(".column.features").style("height", height + "px");
-
-//    iter++;
-//    d3.select("#iter-number").text((iter / 1000).toFixed(3));
-    
+    d3.select(".column.features").style("height", height + "px");   
 }
 function getRelativeHeight(selection) {
     let node = selection.node();
@@ -1472,18 +1432,6 @@ function updateHoverCard(type, nodeOrLink, coordinates) {
 }
 // OK
 function drawLink(input, node2coord, network, container, isFirst, index, length) {
-//    console.log("node2coord >>:", node2coord, input.source.id);
-    // Нужно перепилить входные значения
-//    let inputId = input.source.id;
-//    switch(input.source.id)
-//    {
-//        case 1: inputId = 'x';        break;
-//        case 2: inputId = 'y';        break;
-//        case 3: inputId = 'xSquared'; break;
-//        case 4: inputId = 'ySquared'; break;
-//        case 5: inputId = 'sinX';     break;
-//        case 6: inputId = 'sinY';     break;
-//    }
 
     let line = container.insert("path", ":first-child");
     let source = node2coord[input.source.id];//inputId
@@ -1491,12 +1439,12 @@ function drawLink(input, node2coord, network, container, isFirst, index, length)
 
     let datum = {
         source: {
-            y: source.cx + RECT_SIZE / 2, // + 2,
+            y: source.cx + RECT_SIZE / 2 + 2,
             x: source.cy
         },
         target: {
             y: dest.cx - RECT_SIZE / 2,
-            x: dest.cy// + ((index - (length - 1) / 2) / length) * 12
+            x: dest.cy + ((index - (length - 1) / 2) / length) * 12
         }
     };
     let diagonal = d3.svg.diagonal().projection(function (d) { return [d.y, d.x]; });
@@ -1572,16 +1520,13 @@ function getLoss(network, dataPoints) {
 async function updateUI(firstStep, reqType = "") {
     
     if (reqType == "ResetInit") {
-        console.log('REQUEST');
         await requestMLP_RESET();
         await requestMLP_INIT();
     }
     else if (reqType == "Train") {
-        console.log('REQUEST');
         await requestMLP_TRAIN();
     }
     
-    console.log('After REQUEST');
     if (firstStep === void 0) { firstStep = false; }
     updateWeightsUI(network, d3.select("g.core"));
     updateBiasesUI(network);
@@ -1626,21 +1571,24 @@ function constructInput(x, y) {
 }
 
 //---------------------важная функция-------------------------\\
-async function oneStep() {// Здесь нужно рисовать нейронку.
+async function oneStep() {
     d3.select("#iter-number").text((iter / 1000).toFixed(3));
     await updateUI(false, "Train"); // Запрос
 
+    if (oneStep_button) { }
+    else if (!player.isPlaying) return;
+    
     iter++;
+    d3.select("#iter-number").text((iter / 1000).toFixed(3));
+
+    oneStep_button = false;
     trainData.forEach(function (point, i) {
         let input = constructInput(point.x, point.y);
         forwardProp(network, input);
-        //backProp(network, point.label, Errors.SQUARE);
-//        if ((i + 1) % state.batchSize === 0) {
-//            updateWeights(network, state.learningRate, state.regularizationRate);
-//        }
     });
     lossTrain = getLoss(network, trainData);
     lossTest = getLoss(network, testData);
+    //player.isPlaying = true;
 }
 
 // OK
@@ -1660,7 +1608,7 @@ function getOutputWeights(network) {
 }
 
 //---------------------важная функция-------------------------\\
-async function reset() { // по-моему, тут просто нечему ломаться + все тесты показывают, что с ней всё ок.
+async function reset() {
     lineChart.reset();
     state.serialize();
     player.pause();
@@ -1789,7 +1737,6 @@ hideControls();          // OK
 
 //---------------------------------------------Логика запросов. Работает.
 
-
 async function requestMLP_INIT() {
 
     let buff_name = state.datasetName;
@@ -1807,7 +1754,7 @@ async function requestMLP_INIT() {
 
     state.datasetName = buff_name;
     state.activation = buff_actv;
-    console.log('INIT');
+    //console.log('INIT');
 //    console.log('response  ',response.statusText.slice(2, -1));
     
 
@@ -1822,12 +1769,17 @@ async function requestMLP_TRAIN() {
         headers: { 'Content-Type': 'application/json' },
         body: `{"id": ${currentId_MLP}, "datasetName": "${state.dataset.name}"}`
     });
+
+    if (oneStep_button || oneStep_first) {  }
+    else if (!player.isPlaying) return;
+    oneStep_first = false;
+
     network = getResObj( JSON.parse(response.statusText.slice(2, -1)) )[1];
    
 }
 async function requestMLP_RESET() {
     if (currentId_MLP == -1) return;
-    console.log('RESET');
+    //console.log('RESET');
     let reqBody = `{"id": ${currentId_MLP}}`;
 
     let response = await fetch("http://localhost:8080/reset", {

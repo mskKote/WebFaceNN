@@ -15,13 +15,13 @@ function buildNetworkRBF(responseNodesRBF) {
   //let newNodePos;
   //let newNode = responseNodesRBF//responseNodesRBF[responseNodesRBF.length - 1];
 
-  for (i = 0; i < networkRBF.length; i++) {
-    if (networkRBF[i].wx == responseNodesRBF.wx && networkRBF[i].wy == responseNodesRBF.wy) {
-        networkRBF[i].weight += responseNodesRBF.weight;
-        trainDataRBF[i].weight += responseNodesRBF.weight;
-        return i;
-    }
-  }
+//   for (i = 0; i < networkRBF.length; i++) {
+//     if (networkRBF[i].wx == responseNodesRBF.wx && networkRBF[i].wy == responseNodesRBF.wy) {
+//         networkRBF[i].weight += responseNodesRBF.weight;
+//         trainDataRBF[i].weight += responseNodesRBF.weight;
+//         return i;
+//     }
+//   }
   // Если это уникальный узел
   networkRBF.push(new NodeRBF(
       responseNodesRBF.id,
@@ -233,6 +233,7 @@ class PlayerRBF {
               return true;
           }
           oneStepRBF();
+          this.isPlaying = false;
           return false;
       }, 0);
   }
@@ -265,6 +266,7 @@ let testDataRBF = [];
 let networkRBF = [];
 let playerRBF = new PlayerRBF();
 
+let oneStepRBF_button = false;
 
 function makeGUIRBF() {
     d3.select("#reset-button-RBF").on("click", function () {
@@ -279,6 +281,7 @@ function makeGUIRBF() {
     });
     d3.select("#next-step-button-RBF").on("click", function () {
         playerRBF.pause();
+        oneStepRBF_button = true;
         oneStepRBF();
     });
     d3.select("#data-regen-button-RBF").on("click", function () {
@@ -384,7 +387,7 @@ function makeGUIRBF() {
           mainWidth = newWidth;
           drawNetworkRBF();
           updateDecisionBoundaryRBF();
-          updateUIRBF(); // Тут не должно быть запроса.
+          updateUIRBF();
       }
     });
 }
@@ -438,27 +441,17 @@ function updateUIRBF(reqType = "") {
     else if (reqType == "Train") {
         requestRBF_TRAIN();
     }
-
-    //drawNetworkRBF();
-    //updateDecisionBoundaryRBF();
 }
 
 function oneStepRBF() {
     d3.select("#iter-number-RBF").text((iterRBF / 1000).toFixed(3));
     //iterRBF++;    d3.select("#iter-number-RBF").text((iterRBF / 1000).toFixed(3));
     updateUIRBF("Train"); // Тут точно нужен Train.
+    playerRBF.isPlaying = true;
 }
 function drawNetworkRBF(newNodePos = networkRBF.length - 1) {
   if (networkRBF[0] === undefined) return;
 
-  /**
-   * Формула для вычисления производной сигмоиды для рисования на canvas, 
-   * придуманная великим и самым охуительным математиком  - Виталием Поповым
-   * @param x в формуле 
-   * @param r это надуманный параметр для радиуса
-   * @param weight сила связи, в данном случае высота  
-   * @param bright надуманный параметр яркости
-   */
   function sigmoidDerr(x, r, weight, bright) { 
     return Math.exp(-x*r)/Math.pow(1+Math.exp(-x*r), 2) * weight * bright;
   }
@@ -581,24 +574,23 @@ async function requestRBF_INIT() {
 
 async function requestRBF_TRAIN() {
 
-    // НЕ ЗАБЫТЬ ПОМЕНЯТЬ ACTIVATION
-    //let reqBodyRBF = '{"id": 0, "datasetName": "classifyCircleData"}'
-    let reqBodyRBF = `{"id": ${currentId_RBF}, "datasetName": "${stateRBF.datasetName}"}`;
-    //console.log(reqBodyRBF);
     let response = await fetch("http://localhost:8080/get_values", {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: reqBodyRBF
+        body: `{"id": ${currentId_RBF}, "datasetName": "${stateRBF.datasetName}"}`
     });
+    // Останавливаем в случае чего
+    if (oneStepRBF_button) oneStepRBF_button = false;
+    else if (!playerRBF.isPlaying) return;
+    
+    // playerRBF.isPlaying = true; 
 
-//    console.group('TRAIN RBF');
-//    console.log('response  ', JSON.parse(response.statusText.slice(2, -1)).last_node);
-//    console.groupEnd();
+    // console.group('TRAIN RBF');
+    // console.log(iterRBF);
+    // console.log('response  ', JSON.parse(response.statusText.slice(2, -1)).last_node);
+    // console.groupEnd();
 
-    // Новые данные получены, нужно их десереализовать, отрисовать и вызвать алгоритм заново
-    // Впрочем нужно определиться только с местом десереализации, ведь остальное будет сделано
-    // в updateUIRBF
     let newNodePos = buildNetworkRBF(JSON.parse(response.statusText.slice(2, -1)).last_node);
     // Вызывать тут отрисовку нейронов
     drawNetworkRBF(newNodePos);
@@ -607,10 +599,8 @@ async function requestRBF_TRAIN() {
 
 async function requestRBF_RESET() {
     if (currentId_RBF == -1) return;
-//    console.group('RESET RBF');
-//    let reqBodyRBF = '{"id": 0}'
+
     let reqBodyRBF = `{"id": ${currentId_RBF}}`;
-//    console.log(reqBodyRBF);
 
     let response = await fetch("http://localhost:8080/reset", {
         method: 'POST',
@@ -619,9 +609,6 @@ async function requestRBF_RESET() {
         body: reqBodyRBF
     });
 
-
-//    console.log('response  ',response);
-//    console.groupEnd();
     // Обнуляем ID
     currentId_RBF = -1;
 }
