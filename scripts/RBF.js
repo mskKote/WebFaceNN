@@ -12,16 +12,7 @@ class NodeRBF {
  * @param Узлы от сервера responseNodesRBF 
  */
 function buildNetworkRBF(responseNodesRBF) {
-  //let newNodePos;
-  //let newNode = responseNodesRBF//responseNodesRBF[responseNodesRBF.length - 1];
 
-//   for (i = 0; i < networkRBF.length; i++) {
-//     if (networkRBF[i].wx == responseNodesRBF.wx && networkRBF[i].wy == responseNodesRBF.wy) {
-//         networkRBF[i].weight += responseNodesRBF.weight;
-//         trainDataRBF[i].weight += responseNodesRBF.weight;
-//         return i;
-//     }
-//   }
   // Если это уникальный узел
   networkRBF.push(new NodeRBF(
       responseNodesRBF.id,
@@ -36,22 +27,6 @@ function buildNetworkRBF(responseNodesRBF) {
   });
 
   return networkRBF.length - 1;
-// Пинок под зад для ускорения
-//  for (let i = networkRBF.length - 1; i < responseNodesRBF.length; i++) {
-//
-//    // Это работает, пробую 1 вещь сделать
-//    networkRBF[i] = new NodeRBF(
-//      responseNodesRBF[i].id,
-//      responseNodesRBF[i].weight,
-//      responseNodesRBF[i].wx,
-//      responseNodesRBF[i].wy);
-//
-//    trainDataRBF[i] = {
-//        x:      responseNodesRBF[i].wx,
-//        y:      responseNodesRBF[i].wy,
-//        label:  responseNodesRBF[i].weight
-//    };
-//  }
 }
 
 class StateRBF {
@@ -61,29 +36,7 @@ class StateRBF {
     this.discretize = false; this.problem = Problem.CLASSIFICATION;  this.percTrainData = 50;
     this.activation = Activations.SIGMOID;
     this.dataset = classifyCircleData; this.regDataset = regressPlane; }
-//  serialize() {
-//    let _this = this;
-//    let props = [];
-//    StateRBF.PROPS.forEach(function (_a) {
-//      let name = _a.name, type = _a.type, keyMap = _a.keyMap;
-//      let value = _this[name];
-//      if (value == null) {
-//        return;
-//      }
-//      if (type === Type.OBJECT) {
-//        value = getKeyFromValue(keyMap, value);
-//      }
-//      else if (type === Type.ARRAY_NUMBER ||
-//        type === Type.ARRAY_STRING) {
-//        value = value.join(",");
-//      }
-//      props.push(name + "=" + value);
-//    });
-//    getHideProps(this).forEach(function (prop) {
-//      props.push(prop + "=" + _this[prop]);
-//    });
-//    window.location.hash = props.join("&");
-//  }
+
   getHiddenProps() {
     let result = [];
     for (let prop in this) {
@@ -96,71 +49,7 @@ class StateRBF {
   setHideProperty(name, hidden) {
     this[name + HIDE_STATE_SUFFIX] = hidden;
   }
-//  static deserializeState() {
-//    let map = {};
-//    for (let _i = 0, _a = window.location.hash.slice(1).split("&"); _i < _a.length; _i++) {
-//      let keyvalue = _a[_i];
-//      let _b = keyvalue.split("="), name_1 = _b[0], value = _b[1];
-//      map[name_1] = value;
-//    }
-//    let stateRBF = new StateRBF();
-//    function hasKey(name) {
-//      return name in map && map[name] != null && map[name].trim() !== "";
-//    }
-//    function parseArray(value) {
-//      return value.trim() === "" ? [] : value.split(",");
-//    }
-//    StateRBF.PROPS.forEach(function (_a) {
-//      let name = _a.name, type = _a.type, keyMap = _a.keyMap;
-//      switch (type) {
-//        case Type.OBJECT:
-//          if (keyMap == null) {
-//            throw Error("A key-value map must be provided for state " +
-//              "variables of type Object");
-//          }
-//          if (hasKey(name) && map[name] in keyMap) {
-//            stateRBF[name] = keyMap[map[name]];
-//          }
-//          break;
-//        case Type.NUMBER:
-//          if (hasKey(name)) {
-//            stateRBF[name] = +map[name];
-//          }
-//          break;
-//        case Type.STRING:
-//          if (hasKey(name)) {
-//            stateRBF[name] = map[name];
-//          }
-//          break;
-//        case Type.BOOLEAN:
-//          if (hasKey(name)) {
-//            stateRBF[name] = (map[name] === "false" ? false : true);
-//          }
-//          break;
-//        case Type.ARRAY_NUMBER:
-//          if (name in map) {
-//            stateRBF[name] = parseArray(map[name]).map(Number);
-//          }
-//          break;
-//        case Type.ARRAY_STRING:
-//          if (name in map) {
-//            stateRBF[name] = parseArray(map[name]);
-//          }
-//          break;
-//        default:
-//          throw Error("Encountered an unknown type for a state variable");
-//      }
-//    });
-//    getHideProps(map).forEach(function (prop) {
-//      stateRBF[prop] = (map[prop] === "true") ? true : false;
-//    });
-//
-//    if (stateRBF.seed == null) {
-//      stateRBF.seed = Math.random().toFixed(5);
-//    }
-//    Math.seedrandom(stateRBF.seed);
-//    return stateRBF;
-//  }
+
 }
 StateRBF.PROPS = [
     { name: "activation", type: Type.OBJECT, keyMap: activations },
@@ -240,7 +129,6 @@ class PlayerRBF {
 }
 
 
-//let stateRBF = StateRBF.deserializeState();
 let stateRBF = new StateRBF();
 
 let boundaryRBF = new Array(DENSITY_RBF);
@@ -480,7 +368,6 @@ function drawNetworkRBF(newNodePos = networkRBF.length - 1) {
 
 function resetRBF() {
     nullify();
-    //stateRBF.serialize();
     playerRBF.pause();
     iterRBF = 0;
     d3.select("#iter-number-RBF").text((iterRBF / 1000).toFixed(3));
@@ -551,9 +438,7 @@ resetRBF();
 async function requestRBF_INIT() {
 
     stateRBF.datasetName = stateRBF.dataset.name;
-    // НЕ ЗАБЫТЬ ПОМЕНЯТЬ ACTIVATION
     stateRBF.activation = stateRBF.activation.toString();
-    //console.log(JSON.stringify(stateRBF))
     // Тело для разных запросов
     let reqBodyRBF = '{"sigma":0.5,"radius":1.5,"showTestData":false,"noise":0,"discretize":false,"problem":0,"percTrainData":50,"activation":"identity","seed":"0.40979","collectStats":false, "datasetName":"classifyCircleData"}'
 
