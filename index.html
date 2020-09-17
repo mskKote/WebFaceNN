@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles/bundle.css" type="text/css">
     <link rel="stylesheet" href="styles/styles.css" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" type="text/css">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/000000/network.png">
+
     <!-- Наши библиотеки -->
     <script src="scripts/lib.js"></script>
     <!-- d3 version 5 d3_5-->
@@ -157,9 +157,6 @@
         Regenerate
       </button>
             </div>
-            <div style="margin-top: 230px">
-                    <a style="color: lightgrey" href="https://icons8.com/icon/13052/network">Network icon by Icons8</a>
-            </div>
         </div>
         <!-- РАБОТАЕМ С RBF -->
         <div id="RBF_top" class="container l--page" style="display:none;">
@@ -230,7 +227,7 @@
             <div class="control ui-radius">
                 <label for="radius" id="RBF">Radius:&nbsp;&nbsp;<span class="value" id="RBF">XX</span></label>
                 <p class="slider">
-                    <input class="mdl-slider mdl-js-slider" type="range" id="radius-RBF" min="1" max="7" step="0.5">
+                    <input class="mdl-slider mdl-js-slider" type="range" id="radius-RBF" min="3" max="7" step="0.5">
                 </p>
             </div>
             <!-- Здесь сигма -->
@@ -419,6 +416,16 @@
 
                 </div>
                 <br/>
+                <div style="display:flex;">
+                    <label class="ui-showTestData mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="show-test-data">
+              <input type="checkbox" id="show-test-data" class="mdl-checkbox__input" checked>
+              <span class="mdl-checkbox__label label">Show test data</span>
+            </label>
+                    <label class="ui-discretize mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="discretize">
+              <input type="checkbox" id="discretize" class="mdl-checkbox__input" checked>
+              <span class="mdl-checkbox__label label">Discretize output</span>
+            </label>
+                </div>
                 <div class="metrics">
                     <div class="output-stats ui-percTrainData">
                         <span>Test loss</span>
@@ -440,13 +447,13 @@
 
     <!-- MLP -->
     <script defer src="scripts/MLP.js"></script>
-    <script defer src="scripts/bracket.js"></script>
+    <!-- <script defer src="scripts/bracket.js"></script> -->
     <script defer src="scripts/menu.js"></script>
     <!-- RBF -->
     <script defer src="scripts/RBF.js"></script>
     <!--Вылезание Heatmap при прокрутке страницы-->
     <script src="scripts/scroll-heatmap-appear.js"></script>
-
+    
 <!--    <script defer src="scripts/request.js"></script>-->
 </body>
 
